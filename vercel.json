@@ -2,6 +2,9 @@
   "buildCommand": "cd Frontend && npm ci && npm run build",
   "outputDirectory": "Frontend/dist",
   "installCommand": "npm ci",
+  "functions": {
+    "api/**/*.js": { "maxDuration": 60 }
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
