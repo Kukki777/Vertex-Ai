@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { getMongoConnection } from "../../../shared/mongo.js";
 const fileSchema = new mongoose.Schema({
     owner: {
         type: mongoose.Schema.Types.ObjectId,
@@ -46,5 +47,6 @@ const fileSchema = new mongoose.Schema({
         default:false
     }
 },{ timestamps: true });
-const File = mongoose.model("File", fileSchema);
+const { connection } = getMongoConnection("FILE_MONGODB_URI");
+const File = connection.models.File || connection.model("File", fileSchema);
 export default File;

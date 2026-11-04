@@ -50,7 +50,7 @@ export const login = async (req, res) => {
         const cookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+            sameSite: "strict",
             maxAge: SESSION_EXPIRY * 1000
         };
         res.cookie("sessionId", sessionId, cookieOptions);
@@ -81,7 +81,7 @@ export const logout = async (req, res) => {
             res.clearCookie("sessionId", {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
-                sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
+                sameSite: "strict"
             });
         }
 

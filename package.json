@@ -1,0 +1,14 @@
+{
+  "name": "vertex-ai-vercel-functions",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@upstash/redis": "^1.41.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "firebase-admin": "^14.5.0",
+    "ioredis": "^6.0.0",
+    "mongoose": "^9.10.4"
+  }
+}
