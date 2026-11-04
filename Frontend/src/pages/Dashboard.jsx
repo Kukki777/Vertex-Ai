@@ -18,6 +18,7 @@ import CreateProjectModel from "../components/CreateProjectModel";
 
 function Dashboard() {
   const [loading, setLoading] = React.useState(false);
+  const [signInError, setSignInError] = React.useState("");
   const [activeSession, setActiveSession] = React.useState("projects");
   const [loadingProjects, setLoadingProjects] = React.useState(false);
   const [openModel, setOpenModel] = React.useState(false);
@@ -29,6 +30,7 @@ function Dashboard() {
 
   const handleGoogleSignIn = async () => {
     try {
+      setSignInError("");
       setLoading(true);
 
       const data = await signInWithPopup(auth, googleProvider);
@@ -41,6 +43,26 @@ function Dashboard() {
       console.log("Login successful:", newdata);
     } catch (error) {
       console.error("Google sign-in failed:", error);
+      const code = error?.code;
+      if (code === "auth/unauthorized-domain") {
+        setSignInError(
+          "This app domain is not authorized for Google sign-in. Add the Vercel domain to Firebase Authentication's authorized domains."
+        );
+      } else if (code === "auth/operation-not-allowed") {
+        setSignInError(
+          "Google sign-in is disabled for this Firebase project. Enable Google in Firebase Authentication providers."
+        );
+      } else if (code === "auth/invalid-api-key") {
+        setSignInError(
+          "Firebase is missing a valid web API key. Set VITE_FIREBASE_API_KEY in the Vercel project settings and redeploy."
+        );
+      } else if (error?.response || code?.startsWith("auth/") === false) {
+        setSignInError(
+          "Google sign-in completed, but the app could not reach its backend. Check the VITE_SERVER_URL deployment setting."
+        );
+      } else {
+        setSignInError(error?.message || "Google sign-in failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -117,6 +139,12 @@ function Dashboard() {
 
             {loading ? "Loading..." : "Continue with Google"}
           </button>
+
+          {signInError && (
+            <p className="mt-4 text-left text-xs leading-relaxed text-red-600 dark:text-red-400" role="alert">
+              {signInError}
+            </p>
+          )}
 
           <p className="mt-5 text-[11px] text-slate-500 dark:text-slate-600">
             By continuing you agree to our Terms and Privacy Policy
