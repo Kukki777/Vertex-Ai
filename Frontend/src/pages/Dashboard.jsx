@@ -26,7 +26,9 @@ function Dashboard() {
   const dispatch = useDispatch();
 
   const userData = useSelector(selectUserData);
-  const { projects } = useSelector((state) => state.project);
+  const projects = useSelector((state) =>
+    Array.isArray(state.project?.projects) ? state.project.projects : []
+  );
 
   const handleGoogleSignIn = async () => {
     try {
