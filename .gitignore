@@ -16,3 +16,4 @@ Backend/services/auth/serviceAccountKey.json
 .vscode/
 .idea/
 .vercel
+.env*
