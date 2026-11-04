@@ -47,23 +47,20 @@ function Dashboard() {
       console.error("Google sign-in failed:", error);
       const code = error?.code;
       if (code === "auth/unauthorized-domain") {
+        setSignInError("This app domain is not authorized for Google sign-in in Firebase.");
+      } else if (error?.response) {
+        const message = error.response.data?.message;
         setSignInError(
-          "This app domain is not authorized for Google sign-in. Add the Vercel domain to Firebase Authentication's authorized domains."
+          message
+            ? `The backend rejected sign-in: ${message}`
+            : `The backend returned HTTP ${error.response.status} during sign-in.`,
         );
-      } else if (code === "auth/operation-not-allowed") {
-        setSignInError(
-          "Google sign-in is disabled for this Firebase project. Enable Google in Firebase Authentication providers."
-        );
-      } else if (code === "auth/invalid-api-key") {
-        setSignInError(
-          "Firebase is missing a valid web API key. Set VITE_FIREBASE_API_KEY in the Vercel project settings and redeploy."
-        );
-      } else if (error?.response || code?.startsWith("auth/") === false) {
-        setSignInError(
-          "Google sign-in completed, but the app could not reach its backend. Check the VITE_SERVER_URL deployment setting."
-        );
+      } else if (code?.startsWith("auth/")) {
+        setSignInError(error.message || "Google sign-in failed. Please try again.");
       } else {
-        setSignInError(error?.message || "Google sign-in failed. Please try again.");
+        setSignInError(
+          "Could not connect to the backend. Check the VITE_SERVER_URL deployment setting.",
+        );
       }
     } finally {
       setLoading(false);
