@@ -1,6 +1,9 @@
 import { redis } from "../../../gateway/shared/redis/redis.js";
 import Project from "../models/project.model.js";
 
+const parseCachedProjects = (value) =>
+    typeof value === "string" ? JSON.parse(value) : value;
+
 export const createProject = async (req, res) => {
     try{
         // console.log("PROJECT HEADERS:", req.headers);
@@ -12,11 +15,14 @@ export const createProject = async (req, res) => {
                 message: "User ID not found in request headers",
             });
         }
-        const{name,description}=req.body;
-        if(!name || !description){
+        const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+        const description = typeof req.body?.description === "string"
+            ? req.body.description.trim()
+            : "";
+        if(!name){
             return res.status(400).json({
                 success: false,
-                message: "Name and description are required",
+                message: "Project name is required",
             });
         }
         const project=await Project.create({
@@ -50,11 +56,15 @@ export const getProjects = async (req, res) => {
             });
         }
         const key=`projects-${userId}`;
-        let result=await redis.get(key);
+        const result=await redis.get(key);
         if(result){
+            const projects = parseCachedProjects(result);
+            if (!Array.isArray(projects)) {
+                throw new Error("Invalid cached projects data");
+            }
              return res.status(200).json({
             success: true,
-            projects:JSON.parse(result)
+            projects
         });
         }
         
@@ -111,11 +121,15 @@ export const getStarredProjects = async (req, res) => {
             });
         }   
         const key=`starred-projects-${userId}`; 
-        let result=await redis.get(key);
+        const result=await redis.get(key);
         if(result){
+            const projects = parseCachedProjects(result);
+            if (!Array.isArray(projects)) {
+                throw new Error("Invalid cached starred projects data");
+            }
              return res.status(200).json({
             success: true,
-            projects:JSON.parse(result)
+            projects
         });
         }
         const projects=await Project.find({owner:userId,starred:true}).sort({updatedAt:-1});

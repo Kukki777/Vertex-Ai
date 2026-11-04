@@ -9,14 +9,31 @@ function CreateProjectModel({ open, onClose }) {
     const[name,setName]=React.useState("");
     const[description,setDescription]=React.useState("");
     const[loading,setLoading]=React.useState(false);
+    const[error,setError]=React.useState("");
     const dispatch=useDispatch()
     const handleCreateProject=async()=>{
+        if (!name.trim()) {
+            setError("Project name is required.");
+            return;
+        }
+
         setLoading(true);
-        const data=await createProject(name,description);
-        await createRootFolder({projectId:data.data._id,projectName:data.data.name})
-        onClose();
-        dispatch(addNewProject(data.data))
-        setLoading(false);
+        setError("");
+        try {
+            const data=await createProject(name.trim(),description.trim());
+            dispatch(addNewProject(data.data));
+            onClose();
+
+            try {
+                await createRootFolder({projectId:data.data._id,projectName:data.data.name});
+            } catch (folderError) {
+                console.error("Project created, but root folder setup failed:", folderError);
+            }
+        } catch (createError) {
+            setError(createError?.response?.data?.message || "Could not create project. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     }
 
   return (
@@ -87,6 +104,7 @@ function CreateProjectModel({ open, onClose }) {
               className="w-full rounded-xl border border-black/[0.08] bg-black/[0.02] px-4 py-3 text-[15px] text-zinc-900 placeholder-zinc-400 outline-none transition-all focus:border-sky-400/60 focus:bg-white focus:ring-4 focus:ring-sky-400/15 dark:border-white/[0.09] dark:bg-white/[0.04] dark:text-white dark:placeholder-zinc-500 dark:focus:bg-white/[0.06] dark:focus:ring-sky-400/10"
             />
           </div>
+          {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         </div>
         <div className="flex justify-end gap-3 border-t border-black/[0.06]  px-7 py-5 dark:border-white/[0.08] ">
           <button
@@ -97,6 +115,7 @@ function CreateProjectModel({ open, onClose }) {
           </button>
           <button
           onClick={handleCreateProject}
+          disabled={loading || !name.trim()}
            className="rounded-xl bg-zinc-900 border border-black/[0.08] bg-black/[0.02] px-5 py-2.5 text-sm font-medium text-white shadow-[0_1px_0_rgba(255,255,255,0.15)_inset,0_8px_24px_-8px_rgba(0,0,0,0.4)] transition-all hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40  dark:border-white/[0.1] dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
           >
             {loading ? "Creating Project..." : "Create Project"}
