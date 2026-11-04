@@ -1,0 +1,94 @@
+envVarGroups:
+  - name: vertex-ai-internal
+    envVars:
+      - key: INTERNAL_SERVICE_TOKEN
+        generateValue: true
+
+services:
+  - type: web
+    name: vertex-ai-gateway
+    runtime: node
+    plan: free
+    rootDir: Backend/gateway
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: vertex-ai-internal
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_ORIGIN
+        value: https://codex-sable-mu.vercel.app
+      - key: AUTH_SERVICE
+        fromService:
+          type: web
+          name: vertex-ai-auth
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: PROJECT_SERVICE
+        fromService:
+          type: web
+          name: vertex-ai-project
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: FILE_SERVICE
+        fromService:
+          type: web
+          name: vertex-ai-file
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+
+  - type: web
+    name: vertex-ai-auth
+    runtime: node
+    plan: free
+    rootDir: Backend/services/auth
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
+
+  - type: web
+    name: vertex-ai-project
+    runtime: node
+    plan: free
+    rootDir: Backend/services/project
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: vertex-ai-internal
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+
+  - type: web
+    name: vertex-ai-file
+    runtime: node
+    plan: free
+    rootDir: Backend/services/file
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: vertex-ai-internal
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false

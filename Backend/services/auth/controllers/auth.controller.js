@@ -47,12 +47,13 @@ export const login = async (req, res) => {
         );
 
         // 6. Set session cookie
-        res.cookie("sessionId", sessionId, {
+        const cookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
             maxAge: SESSION_EXPIRY * 1000
-        });
+        };
+        res.cookie("sessionId", sessionId, cookieOptions);
 
         return res.status(200).json({
             success: true,
@@ -80,7 +81,7 @@ export const logout = async (req, res) => {
             res.clearCookie("sessionId", {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
-                sameSite: "strict"
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
             });
         }
 

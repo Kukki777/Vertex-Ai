@@ -12,11 +12,16 @@ import { getcurrentUser } from "./contollers/user.controller.js";
 import { proxyWithHeader } from "./utils/proxyWithHeader.js";
 
 const app = express();
-const PORT = process.env.PORT ;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+const allowedOrigins = (process.env.FRONTEND_ORIGIN || "http://localhost:5173")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true
 }));
 app.use(cookieParser());
@@ -26,6 +31,7 @@ const authService = process.env.AUTH_SERVICE;
 const projectService = process.env.PROJECT_SERVICE;
 const FileService = process.env.FILE_SERVICE;
 app.get("/api/me",protect,getcurrentUser)
+app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
 
 if (!authService) {
     throw new Error("AUTH_SERVICE environment variable is required");

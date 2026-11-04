@@ -10,7 +10,8 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-const PORT = process.env.PORT ;
+const PORT = process.env.PORT || 3001;
+app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
 app.use("/",router)
 app.get("/", (req, res) => {
     res.send("Hello from auth service");
