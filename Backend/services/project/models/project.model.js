@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { getMongoConnection } from "../../../shared/mongo.js";
 
 const projectSchema = new mongoose.Schema({
     owner: {
@@ -25,7 +24,6 @@ const projectSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-const { connection } = getMongoConnection("PROJECT_MONGODB_URI");
-const Project = connection.models.Project || connection.model("Project", projectSchema);
+const Project = mongoose.model("Project", projectSchema);
 
 export default Project;
