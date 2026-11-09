@@ -9,9 +9,6 @@ export const proxyWithHeader=(serviceUrl)=>{
         if (req.user) {
             proxyReqOpts.headers['x-user-id'] = req.user?._id;
         }
-        if (process.env.INTERNAL_SERVICE_TOKEN) {
-            proxyReqOpts.headers['x-internal-service-token'] = process.env.INTERNAL_SERVICE_TOKEN;
-        }
         return proxyReqOpts;
     },
 }

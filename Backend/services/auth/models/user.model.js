@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { getMongoConnection } from "../../../shared/mongo.js";
 const userSchema = new mongoose.Schema({
     firebaseUid: {
         type: String,
@@ -27,6 +28,7 @@ const userSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-const User = mongoose.model("User", userSchema);
+const { connection } = getMongoConnection("AUTH_MONGODB_URI");
+const User = connection.models.User || connection.model("User", userSchema);
 
 export default User;

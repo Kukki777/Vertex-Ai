@@ -3,7 +3,6 @@ import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import router from "./routes/file.route.js";
-import { requireInternalService } from "./middleware/requireInternalService.js";
 
 dotenv.config();
 
@@ -11,7 +10,6 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
-app.use(requireInternalService);
 
 const PORT = process.env.PORT || 3003;
 app.use("/",router)
