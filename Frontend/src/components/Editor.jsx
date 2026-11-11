@@ -1,9 +1,189 @@
-import React from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import React,{useEffect} from 'react'
+import { getFileIcon } from '../utils/customizeIcon';
+import { Check, Circle, Loader2, Save, X } from 'lucide-react';
+import { updateFile } from '../features/file';
+import MonacoEditor from '@monaco-editor/react';
 
-function Editor() {
+function Editor({activeTab,setActiveTab, openTabs,setOpenTabs,reloadTree}) {
+
+  const[saving,setSaving]=React.useState(false);
+  const[justSaved,setJustSaved]=React.useState(false);
+  const[code,setCode]=React.useState('');
+
+  useEffect(() => {
+    setCode(activeTab?.content);
+   
+  }, [activeTab]);
+  const handleCloseTab = (e,id) => {
+    e.stopPropagation()
+    const result=openTabs.filter((tab) => tab._id !== id);
+    setOpenTabs(result);
+    if (activeTab?._id === id) {
+      if (result.length > 0) {
+        setActiveTab(result[result.length - 1]);
+      } else {
+        setActiveTab(null);
+      }
+    }
+ }
+ if(!activeTab)return(
+  <div className='flex flex-1 flex-col items-center justify-center gap-3  bg-[#0a0a0c] text-zinc-600'>
+    
+  <div className='flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02]'>
+    <Circle size={22} className='text-zinc-700'/>
+    </div>
+    <div className='flex flex-col items-center gap-1'>
+      <span className='text-sm font-medium text-zinc-400'>No File Open</span>
+      <span className='text-xs text-zinc-500'>Select a file from Explorer to start editing</span>
+    </div>
+  </div>
+ )
+                 
+  const save=async()=>{
+    if(!activeTab) return;
+    try{
+      setSaving(true)
+      await updateFile({name:activeTab.name,content:code,id:activeTab._id});
+      setActiveTab({...activeTab,content:code});
+      setOpenTabs(openTabs.map((tab)=>tab._id===activeTab._id?{...tab,content:code}:tab));
+       const result = await updateFile({
+  name: activeTab.name,
+  content: code,
+  id: activeTab._id
+});
+
+console.log("UPDATE RESPONSE:", result);
+
+const treeData = await reloadTree();
+
+console.log("TREE RELOADED:", treeData);
+      setSaving(false);
+      setJustSaved(true);
+      setTimeout(()=>{
+        setJustSaved(false);
+      },2000)
+    }
+    catch(error){
+      setSaving(false)
+      console.log(error)
+    }
+  }
+  const ActiveIcon=getFileIcon(activeTab?.name).icon
+  const ActiveColor=getFileIcon(activeTab?.name).color
+  console.log("activeTab",activeTab)
   return (
-    <div>Editor</div>
+    <div className='flex flex-1 flex-col bg-[#0a0a0c]'>
+      <div className='flex h-10 shrink-0 items-center overflow-x-auto border-b border-white/[0.06] bg-[#111113]/90'>
+      <AnimatePresence initial={false}
+      >
+        {openTabs.map((tab) => {
+          const active=activeTab._id===tab?._id;
+          const {icon:Icon,color}=getFileIcon(tab?.name);
+          return (
+            <motion.div
+            initial={{ opacity: 0,width:0 }}
+            animate={{ opacity: 1,width:'auto' }}
+            exit={{ opacity: 0,width:0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setActiveTab(tab)}
+            className={`group relative flex h-full cursor-pointer items-center gap-2 whitespace-nowrap border-r border-white/[0.06] px-3.5 transition-colors duration-200 ${active ? 'bg-[#0a0a0c] text-white' : 'text-zinc-500 hover:bg-white/[0.02] hover:bg-white/[0.02] hover:text-zinc-300'}`}
+            >
+              <Icon size={14}  className={`${color}`}/>
+              <span className='text-[13px]'>{tab.name}</span>
+              <button className='rounded p-0.5 text-zinc-500 opacity-0 hover:bg-white/10 hover:text-white group-hover:opacity-100'
+              onClick={(e) => handleCloseTab(e,tab._id)}
+              >
+                <X size={13}/>
+              </button>
+              {active && (<motion.div 
+              className='absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-sky-400 to-violet-400'
+              transition={{duration:0.2,ease:"easeOut"}}
+              />)}
+            </motion.div>
+          )
+        })}
+         
+      </AnimatePresence>
+
+      </div>
+      <div className='flex h-10 shrink-0 items-center gap-4 border-b border-white/[0.06] px-4'>
+
+      <div className='flex items-center gap-2 text-zinc-400'>
+      <ActiveIcon size={13} className={`${ActiveColor}`}/>
+      <span className='text-[13px]'>{activeTab?.name}</span>
+      </div>
+      <motion.div
+      whileHover={{scale:1.03}}
+      whileTap={{scale:0.97}}
+      onClick={save}
+      disabled={saving}
+      className="flex items-center gap-3 rounded-lg bg-gradient-to-b from-sky-500 to-sky-600 px-3 py-1.5 text-xs font-medium text-white shadow-[0_1px_0_rgba(255,255,255,0.2)_inset] transition-colors hover:from-sky-400 hover:to-sky-500 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <AnimatePresence initial={false} mode='wait'>
+          {
+            (saving?
+              (<motion.span
+              key="saving"
+              initial={{opacity:0}}
+              animate={{opacity:1}}
+              exit={{opacity:0}}
+              className='flex items-center gap-2'
+              >
+                <Loader2 size={13} className='animate-spin'/>
+                Saving...
+              </motion.span>):
+              justSaved?(
+                <motion.span
+                key="just-saved"
+                initial={{opacity:0}}
+                animate={{opacity:1}}
+                exit={{opacity:0}}
+                className='flex items-center gap-2'
+                >
+                  <Check size={13} />
+                  Saved!
+                </motion.span>
+              ):(
+                <motion.span
+                key="save"
+                initial={{opacity:0}}
+                animate={{opacity:1}}
+                exit={{opacity:0}}
+                className='flex items-center gap-2'
+                >
+                  <Save size={13} />
+                  Save
+                </motion.span>
+              )
+            )
+          }
+          </AnimatePresence>
+               
+        </motion.div>
+        </div>
+        <div className='min-h-0 flex-1'>
+          <MonacoEditor
+          height='100%'
+          theme='vs-dark'
+          language={activeTab?.language ?? 'plaintext'}
+          value={code}
+          onChange={(value)=>setCode(value)}
+          options={{
+            fontSize:14,
+            automaticLayout:true,
+            minimap:{enabled:false},
+            wordWrap:"on",
+            scrollBeyondLastLine:false,
+            padding:{top:12},
+
+            
+          }}
+          />
+        </div>
+    </div>
   )
 }
 
-export default Editor
+
+export default Editor;

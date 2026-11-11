@@ -273,40 +273,32 @@ export const getFile=async(req,res)=>{
     }
 }
 
-export const getTree=async(req,res)=>{
-    try{
-        const userId=req.headers['x-user-id'];
-        const {projectId}=req.params;
+export const getTree = async (req, res) => {
+  try {
+    const userId = req.headers['x-user-id'];
+    const { projectId } = req.params;
 
-        const file=await File.find({
-            projectId,
-            owner:userId,
-            isDeleted:false
-        }).sort({
-            name:1,
-            type:-1
-        })
+    const files = await File.find({
+      projectId,
+      owner: userId,
+      isDeleted: false
+    }).sort({ name: 1, type: -1 });
 
-        if(!file){
-            return res.status(404).json({
-                success:false,
-                message:"File not found",
-            });
-        }
+    const tree = buildTree(files);
 
-        const tree=buildTree(file);
+    return res.status(200).json({
+      success: true,
+      data: tree
+    });
 
-        return res.status(200).json({
-            success:true,
-            data:tree
-        });
-    }
-    catch(error){
-        return res.status(500).json({
-            success:false,
-            message:`Get Tree Error: ${error.message}`,
-        });
-    }
-}
+  } catch (error) {
+    console.error("GET TREE BACKEND ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 

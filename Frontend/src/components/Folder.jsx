@@ -5,7 +5,7 @@ import { getFileIcon, getFolderColor } from "../utils/customizeIcon.js";
 import { createFile, createFolder, deleteFile, updateFile } from "../features/file.js";
 import {createPortal} from "react-dom";
 
-function Folder({ projectId, tree, reloadTree, node }) {
+function Folder({ projectId, tree, reloadTree, node, openFile }) {
     const[folderName,setFolderName]=useState('');
     const[fileName,setFileName]=useState('');
     const[renaming,setRenaming]=useState(false);
@@ -22,7 +22,9 @@ function Folder({ projectId, tree, reloadTree, node }) {
       await reloadTree();
   }
    const handleCreateFile=async()=>{
-      await createFile({projectId,name:fileName,parentId:node._id});
+    const lang=fileName.split('.').pop();
+    
+      await createFile({projectId,name:fileName,parentId:node._id,language:lang});
       await reloadTree();
   }
    const handleRenameFile=async(id)=>{
@@ -47,11 +49,16 @@ function Folder({ projectId, tree, reloadTree, node }) {
     const{icon:Icon,color}=getFileIcon(node.name);
     return (
 
-       <div className="relative">
+       <div className="relative"
+       
+       >
       <motion.div
         whileHover={{ x: 2 }}
         transition={{ duration: 0.15, ease: "easeOut" }}
         className="group flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-white/[0.05] transition-colors duration-150"
+        onClick={()=>{
+          openFile(node);
+       }}
         onContextMenu={(e) => {
            e.preventDefault();
           setMenu({ x: e.clientX, y: e.clientY });
@@ -333,7 +340,7 @@ function Folder({ projectId, tree, reloadTree, node }) {
           className="ml-5 overflow-hidden border-1 border-white/[0.08] pl-1 shadow-2xl shadow-black/50 backdrop-blur-xl"
           >
             {node.children.map((child) => (
-              <Folder projectId={projectId} tree={tree} reloadTree={reloadTree} node={child} />
+              <Folder projectId={projectId} tree={tree} openFile={openFile} reloadTree={reloadTree} node={child} />
             ))}
 
             </motion.div>
